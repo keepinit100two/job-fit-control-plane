@@ -47,15 +47,15 @@ class JobPosting(BaseModel):
 
 
 class NormalizationStatus(str, Enum):
-    SUCCESS = "SUCCESS"
-    WARNING = "WARNING"
-    FAILURE = "FAILURE"
+    SUCCESS = "success"
+    WARNING = "warning"
+    FAILURE = "failure"
 
 
 class NormalizationIssueSeverity(str, Enum):
-    INFO = "INFO"
-    WARNING = "WARNING"
-    ERROR = "ERROR"
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
 
 
 class NormalizationIssue(BaseModel):
@@ -82,3 +82,32 @@ class NormalizationResult(BaseModel):
 class NormalizedJobPostingEnvelope(BaseModel):
     job_posting: Optional[JobPosting] = None
     normalization_result: NormalizationResult
+
+
+class AnalysisStatus(str, Enum):
+    SUCCESS = "success"
+    WARNING = "warning"
+    FAILURE = "failure"
+
+
+class AnalysisResult(BaseModel):
+    analysis_id: str
+    job_posting_id: str
+    raw_posting_id: str
+    content_hash: str
+    analysis_status: AnalysisStatus
+    analysis_confidence: float
+    analysis_issues: List[str] = Field(default_factory=list)
+    system_type: str
+    tier_classification: str
+    pipeline_pattern: Optional[str] = None
+    ai_involvement_level: Optional[str] = None
+    automation_level: Optional[str] = None
+    integration_complexity: Optional[str] = None
+    core_capabilities_required: List[str] = Field(default_factory=list)
+    architecture_signals: List[str] = Field(default_factory=list)
+    business_problem_categories: List[str] = Field(default_factory=list)
+    hardest_interview_concepts: List[str] = Field(default_factory=list)
+    missing_information: List[str] = Field(default_factory=list)
+    reasoning_summary: str
+    analyzed_at: datetime

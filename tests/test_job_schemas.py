@@ -1,6 +1,8 @@
 from datetime import datetime
 
 from app.domain.job_schemas import (
+    AnalysisResult,
+    AnalysisStatus,
     JobPosting,
     NormalizationResult,
     NormalizationStatus,
@@ -77,3 +79,62 @@ def test_envelope_allows_none_job_posting_on_failure_status() -> None:
 
     assert envelope.job_posting is None
     assert envelope.normalization_result.status == NormalizationStatus.FAILURE
+
+
+def test_analysis_result_instantiates_successfully() -> None:
+    result = AnalysisResult(
+        analysis_id="analysis-1",
+        job_posting_id="job-1",
+        raw_posting_id="raw-1",
+        content_hash="hash-1",
+        analysis_status=AnalysisStatus.SUCCESS,
+        analysis_confidence=0.85,
+        system_type="control_plane",
+        tier_classification="tier_2",
+        reasoning_summary="Deterministic schema fixture.",
+        analyzed_at=datetime.utcnow(),
+    )
+
+    assert result.analysis_id == "analysis-1"
+    assert result.analysis_issues == []
+    assert result.core_capabilities_required == []
+
+
+def test_analysis_status_enum_values() -> None:
+    assert AnalysisStatus.SUCCESS == "success"
+    assert AnalysisStatus.WARNING == "warning"
+    assert AnalysisStatus.FAILURE == "failure"
+    assert AnalysisStatus("warning") is AnalysisStatus.WARNING
+
+
+def test_analysis_result_list_defaults_are_isolated_per_instance() -> None:
+    first = AnalysisResult(
+        analysis_id="analysis-1",
+        job_posting_id="job-1",
+        raw_posting_id="raw-1",
+        content_hash="hash-1",
+        analysis_status=AnalysisStatus.SUCCESS,
+        analysis_confidence=0.8,
+        system_type="control_plane",
+        tier_classification="tier_2",
+        reasoning_summary="First instance.",
+        analyzed_at=datetime.utcnow(),
+    )
+    second = AnalysisResult(
+        analysis_id="analysis-2",
+        job_posting_id="job-2",
+        raw_posting_id="raw-2",
+        content_hash="hash-2",
+        analysis_status=AnalysisStatus.SUCCESS,
+        analysis_confidence=0.8,
+        system_type="control_plane",
+        tier_classification="tier_2",
+        reasoning_summary="Second instance.",
+        analyzed_at=datetime.utcnow(),
+    )
+
+    first.analysis_issues.append("issue-a")
+    first.core_capabilities_required.append("capability-a")
+
+    assert second.analysis_issues == []
+    assert second.core_capabilities_required == []
