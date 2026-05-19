@@ -111,3 +111,20 @@ class AnalysisResult(BaseModel):
     missing_information: List[str] = Field(default_factory=list)
     reasoning_summary: str
     analyzed_at: datetime
+
+
+class AnalyzerLLMResult(BaseModel):
+    system_type: str
+    tier_classification: str
+    pipeline_pattern: Optional[str] = None
+    ai_involvement_level: Optional[str] = None
+    automation_level: Optional[str] = None
+    integration_complexity: Optional[str] = None
+    core_capabilities_required: List[str] = Field(default_factory=list)
+    architecture_signals: List[str] = Field(default_factory=list)
+    business_problem_categories: List[str] = Field(default_factory=list)
+    hardest_interview_concepts: List[str] = Field(default_factory=list)
+    missing_information: List[str] = Field(default_factory=list)
+    reasoning_summary: str
+    llm_confidence: float
+    warnings: List[str] = Field(default_factory=list)

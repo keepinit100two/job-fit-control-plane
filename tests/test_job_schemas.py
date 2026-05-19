@@ -3,6 +3,7 @@ from datetime import datetime
 from app.domain.job_schemas import (
     AnalysisResult,
     AnalysisStatus,
+    AnalyzerLLMResult,
     JobPosting,
     NormalizationResult,
     NormalizationStatus,
@@ -138,3 +139,63 @@ def test_analysis_result_list_defaults_are_isolated_per_instance() -> None:
 
     assert second.analysis_issues == []
     assert second.core_capabilities_required == []
+
+
+def test_analyzer_llm_result_instantiates_successfully() -> None:
+    result = AnalyzerLLMResult(
+        system_type="control_plane",
+        tier_classification="tier_2",
+        reasoning_summary="LLM schema fixture.",
+        llm_confidence=0.91,
+    )
+
+    assert result.system_type == "control_plane"
+    assert result.warnings == []
+    assert result.core_capabilities_required == []
+
+
+def test_analyzer_llm_result_list_defaults_are_isolated_per_instance() -> None:
+    first = AnalyzerLLMResult(
+        system_type="control_plane",
+        tier_classification="tier_2",
+        reasoning_summary="First LLM result.",
+        llm_confidence=0.9,
+    )
+    second = AnalyzerLLMResult(
+        system_type="control_plane",
+        tier_classification="tier_2",
+        reasoning_summary="Second LLM result.",
+        llm_confidence=0.9,
+    )
+
+    first.warnings.append("warning-a")
+    first.architecture_signals.append("signal-a")
+
+    assert second.warnings == []
+    assert second.architecture_signals == []
+
+
+def test_llm_confidence_is_separate_from_analysis_confidence() -> None:
+    llm_result = AnalyzerLLMResult(
+        system_type="control_plane",
+        tier_classification="tier_2",
+        reasoning_summary="LLM output.",
+        llm_confidence=0.91,
+    )
+    analysis_result = AnalysisResult(
+        analysis_id="analysis-1",
+        job_posting_id="job-1",
+        raw_posting_id="raw-1",
+        content_hash="hash-1",
+        analysis_status=AnalysisStatus.SUCCESS,
+        analysis_confidence=0.55,
+        system_type="control_plane",
+        tier_classification="tier_2",
+        reasoning_summary="Merged analysis output.",
+        analyzed_at=datetime.utcnow(),
+    )
+
+    assert llm_result.llm_confidence == 0.91
+    assert analysis_result.analysis_confidence == 0.55
+    assert not hasattr(llm_result, "analysis_confidence")
+    assert not hasattr(analysis_result, "llm_confidence")
