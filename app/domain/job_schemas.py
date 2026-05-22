@@ -128,3 +128,8 @@ class AnalyzerLLMResult(BaseModel):
     reasoning_summary: str
     llm_confidence: float
     warnings: List[str] = Field(default_factory=list)
+
+
+class JobPipelineResult(BaseModel):
+    normalized: NormalizedJobPostingEnvelope
+    analysis_result: Optional[AnalysisResult] = None

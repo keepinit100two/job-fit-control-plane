@@ -4,6 +4,7 @@ from app.domain.job_schemas import (
     AnalysisResult,
     AnalysisStatus,
     AnalyzerLLMResult,
+    JobPipelineResult,
     JobPosting,
     NormalizationResult,
     NormalizationStatus,
@@ -199,3 +200,71 @@ def test_llm_confidence_is_separate_from_analysis_confidence() -> None:
     assert analysis_result.analysis_confidence == 0.55
     assert not hasattr(llm_result, "analysis_confidence")
     assert not hasattr(analysis_result, "llm_confidence")
+
+
+def _normalized_envelope() -> NormalizedJobPostingEnvelope:
+    normalization_result = NormalizationResult(
+        raw_posting_id="raw-1",
+        content_hash="hash-raw-1",
+        status=NormalizationStatus.SUCCESS,
+        confidence=0.92,
+        raw_text_quality_score=0.88,
+        used_llm=False,
+        normalized_at=datetime.utcnow(),
+    )
+    job_posting = JobPosting(
+        job_posting_id="job-1",
+        raw_posting_id="raw-1",
+        content_hash="hash-job-1",
+        source="linkedin",
+        title="Senior Python Engineer",
+        summary="Build and maintain backend services.",
+        normalized_at=datetime.utcnow(),
+    )
+    return NormalizedJobPostingEnvelope(
+        job_posting=job_posting,
+        normalization_result=normalization_result,
+    )
+
+
+def test_job_pipeline_result_with_normalized_only() -> None:
+    envelope = _normalized_envelope()
+    pipeline_result = JobPipelineResult(normalized=envelope)
+
+    assert pipeline_result.analysis_result is None
+    assert pipeline_result.normalized is envelope
+
+
+def test_job_pipeline_result_with_normalized_and_analysis() -> None:
+    envelope = _normalized_envelope()
+    analysis = AnalysisResult(
+        analysis_id="analysis-1",
+        job_posting_id="job-1",
+        raw_posting_id="raw-1",
+        content_hash="hash-job-1",
+        analysis_status=AnalysisStatus.SUCCESS,
+        analysis_confidence=0.85,
+        system_type="control_plane",
+        tier_classification="tier_2",
+        reasoning_summary="Pipeline analysis fixture.",
+        analyzed_at=datetime.utcnow(),
+    )
+    pipeline_result = JobPipelineResult(
+        normalized=envelope,
+        analysis_result=analysis,
+    )
+
+    assert pipeline_result.analysis_result is analysis
+    assert pipeline_result.analysis_result.analysis_id == "analysis-1"
+
+
+def test_job_pipeline_result_preserves_nested_envelope() -> None:
+    envelope = _normalized_envelope()
+    pipeline_result = JobPipelineResult(normalized=envelope)
+
+    assert pipeline_result.normalized.job_posting is not None
+    assert pipeline_result.normalized.job_posting.job_posting_id == "job-1"
+    assert (
+        pipeline_result.normalized.normalization_result.status
+        == NormalizationStatus.SUCCESS
+    )
