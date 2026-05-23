@@ -10,6 +10,9 @@ from app.domain.job_schemas import (
     NormalizationStatus,
     NormalizedJobPostingEnvelope,
     RawJobPosting,
+    FitEvaluationResult,
+    FitEvaluationStatus,
+    UserCapabilityProfile,
 )
 
 
@@ -268,3 +271,136 @@ def test_job_pipeline_result_preserves_nested_envelope() -> None:
         pipeline_result.normalized.normalization_result.status
         == NormalizationStatus.SUCCESS
     )
+
+
+def test_user_capability_profile_instantiates_successfully() -> None:
+    profile = UserCapabilityProfile(
+        profile_id="profile-1",
+        primary_role_focus="backend_engineer",
+        updated_at=datetime.utcnow(),
+    )
+
+    assert profile.profile_id == "profile-1"
+    assert profile.primary_role_focus == "backend_engineer"
+    assert profile.programming_languages == []
+    assert profile.strongest_capabilities == []
+
+
+def test_user_capability_profile_list_defaults_are_isolated_per_instance() -> None:
+    first = UserCapabilityProfile(
+        profile_id="profile-1",
+        primary_role_focus="backend_engineer",
+        updated_at=datetime.utcnow(),
+    )
+    second = UserCapabilityProfile(
+        profile_id="profile-2",
+        primary_role_focus="platform_engineer",
+        updated_at=datetime.utcnow(),
+    )
+
+    first.programming_languages.append("python")
+    first.ai_capabilities.append("llm_integration")
+
+    assert second.programming_languages == []
+    assert second.ai_capabilities == []
+
+
+def test_user_capability_profile_represents_ai_automation_and_control_plane() -> None:
+    profile = UserCapabilityProfile(
+        profile_id="profile-1",
+        primary_role_focus="control_plane_engineer",
+        programming_languages=["python"],
+        frameworks_and_libraries=["fastapi", "pydantic"],
+        ai_capabilities=["openai_structured_outputs", "prompt_design"],
+        automation_capabilities=["workflow_orchestration", "zapier"],
+        architecture_patterns=["event_driven", "idempotent_ingest"],
+        strongest_capabilities=["pipeline_design", "schema_modeling"],
+        preferred_work_types=["control_plane", "workflow_automation"],
+        updated_at=datetime.utcnow(),
+    )
+
+    assert profile.primary_role_focus == "control_plane_engineer"
+    assert "openai_structured_outputs" in profile.ai_capabilities
+    assert "workflow_orchestration" in profile.automation_capabilities
+    assert "control_plane" in profile.preferred_work_types
+
+
+def test_fit_evaluation_result_instantiates_successfully() -> None:
+    result = FitEvaluationResult(
+        fit_evaluation_id="fit-1",
+        analysis_id="analysis-1",
+        profile_id="profile-1",
+        fit_status=FitEvaluationStatus.SUCCESS,
+        fit_score=0.82,
+        confidence=0.88,
+        evaluation_summary="Strong alignment with control-plane requirements.",
+        evaluated_at=datetime.utcnow(),
+    )
+
+    assert result.fit_evaluation_id == "fit-1"
+    assert result.fit_status == FitEvaluationStatus.SUCCESS
+    assert result.matching_strengths == []
+    assert result.capability_gaps == []
+
+
+def test_fit_evaluation_status_enum_values() -> None:
+    assert FitEvaluationStatus.SUCCESS == "success"
+    assert FitEvaluationStatus.WARNING == "warning"
+    assert FitEvaluationStatus.FAILURE == "failure"
+    assert FitEvaluationStatus("warning") is FitEvaluationStatus.WARNING
+
+
+def test_fit_evaluation_result_list_defaults_are_isolated_per_instance() -> None:
+    first = FitEvaluationResult(
+        fit_evaluation_id="fit-1",
+        analysis_id="analysis-1",
+        profile_id="profile-1",
+        fit_status=FitEvaluationStatus.SUCCESS,
+        fit_score=0.8,
+        confidence=0.85,
+        evaluation_summary="First evaluation.",
+        evaluated_at=datetime.utcnow(),
+    )
+    second = FitEvaluationResult(
+        fit_evaluation_id="fit-2",
+        analysis_id="analysis-2",
+        profile_id="profile-2",
+        fit_status=FitEvaluationStatus.SUCCESS,
+        fit_score=0.7,
+        confidence=0.75,
+        evaluation_summary="Second evaluation.",
+        evaluated_at=datetime.utcnow(),
+    )
+
+    first.matching_strengths.append("fastapi")
+    first.capability_gaps.append("kubernetes")
+
+    assert second.matching_strengths == []
+    assert second.capability_gaps == []
+
+
+def test_fit_evaluation_result_represents_strengths_gaps_and_positioning() -> None:
+    result = FitEvaluationResult(
+        fit_evaluation_id="fit-1",
+        analysis_id="analysis-1",
+        profile_id="profile-1",
+        fit_status=FitEvaluationStatus.WARNING,
+        fit_score=0.68,
+        confidence=0.72,
+        matching_strengths=["pipeline_design", "schema_modeling"],
+        capability_gaps=["event_sourcing_depth"],
+        high_risk_gaps=["distributed_tracing_at_scale"],
+        low_risk_gaps=["grafana_dashboards"],
+        positioning_advantages=["control_plane_experience"],
+        positioning_concerns=["limited_enterprise_crm_exposure"],
+        interview_readiness_signals=["can_explain_idempotent_ingest"],
+        recommended_focus_areas=["integration_complexity_patterns"],
+        evaluation_summary="Good fit with targeted interview preparation.",
+        evaluated_at=datetime.utcnow(),
+    )
+
+    assert result.fit_status == FitEvaluationStatus.WARNING
+    assert "pipeline_design" in result.matching_strengths
+    assert "event_sourcing_depth" in result.capability_gaps
+    assert "control_plane_experience" in result.positioning_advantages
+    assert "limited_enterprise_crm_exposure" in result.positioning_concerns

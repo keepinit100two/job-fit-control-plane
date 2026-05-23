@@ -133,3 +133,48 @@ class AnalyzerLLMResult(BaseModel):
 class JobPipelineResult(BaseModel):
     normalized: NormalizedJobPostingEnvelope
     analysis_result: Optional[AnalysisResult] = None
+
+
+class UserCapabilityProfile(BaseModel):
+    profile_id: str
+    primary_role_focus: str
+    programming_languages: List[str] = Field(default_factory=list)
+    frameworks_and_libraries: List[str] = Field(default_factory=list)
+    infrastructure_tools: List[str] = Field(default_factory=list)
+    ai_capabilities: List[str] = Field(default_factory=list)
+    automation_capabilities: List[str] = Field(default_factory=list)
+    architecture_patterns: List[str] = Field(default_factory=list)
+    deployment_capabilities: List[str] = Field(default_factory=list)
+    integration_capabilities: List[str] = Field(default_factory=list)
+    project_experience: List[str] = Field(default_factory=list)
+    domain_experience: List[str] = Field(default_factory=list)
+    strongest_capabilities: List[str] = Field(default_factory=list)
+    weaker_capabilities: List[str] = Field(default_factory=list)
+    communication_capabilities: List[str] = Field(default_factory=list)
+    preferred_work_types: List[str] = Field(default_factory=list)
+    updated_at: datetime
+
+
+class FitEvaluationStatus(str, Enum):
+    SUCCESS = "success"
+    WARNING = "warning"
+    FAILURE = "failure"
+
+
+class FitEvaluationResult(BaseModel):
+    fit_evaluation_id: str
+    analysis_id: str
+    profile_id: str
+    fit_status: FitEvaluationStatus
+    fit_score: float
+    confidence: float
+    matching_strengths: List[str] = Field(default_factory=list)
+    capability_gaps: List[str] = Field(default_factory=list)
+    high_risk_gaps: List[str] = Field(default_factory=list)
+    low_risk_gaps: List[str] = Field(default_factory=list)
+    positioning_advantages: List[str] = Field(default_factory=list)
+    positioning_concerns: List[str] = Field(default_factory=list)
+    interview_readiness_signals: List[str] = Field(default_factory=list)
+    recommended_focus_areas: List[str] = Field(default_factory=list)
+    evaluation_summary: str
+    evaluated_at: datetime
