@@ -230,17 +230,8 @@ def _normalized_envelope() -> NormalizedJobPostingEnvelope:
     )
 
 
-def test_job_pipeline_result_with_normalized_only() -> None:
-    envelope = _normalized_envelope()
-    pipeline_result = JobPipelineResult(normalized=envelope)
-
-    assert pipeline_result.analysis_result is None
-    assert pipeline_result.normalized is envelope
-
-
-def test_job_pipeline_result_with_normalized_and_analysis() -> None:
-    envelope = _normalized_envelope()
-    analysis = AnalysisResult(
+def _analysis_fixture() -> AnalysisResult:
+    return AnalysisResult(
         analysis_id="analysis-1",
         job_posting_id="job-1",
         raw_posting_id="raw-1",
@@ -252,6 +243,20 @@ def test_job_pipeline_result_with_normalized_and_analysis() -> None:
         reasoning_summary="Pipeline analysis fixture.",
         analyzed_at=datetime.utcnow(),
     )
+
+
+def test_job_pipeline_result_with_normalized_only() -> None:
+    envelope = _normalized_envelope()
+    pipeline_result = JobPipelineResult(normalized=envelope)
+
+    assert pipeline_result.analysis_result is None
+    assert pipeline_result.fit_evaluation_result is None
+    assert pipeline_result.normalized is envelope
+
+
+def test_job_pipeline_result_with_normalized_and_analysis() -> None:
+    envelope = _normalized_envelope()
+    analysis = _analysis_fixture()
     pipeline_result = JobPipelineResult(
         normalized=envelope,
         analysis_result=analysis,
@@ -259,6 +264,31 @@ def test_job_pipeline_result_with_normalized_and_analysis() -> None:
 
     assert pipeline_result.analysis_result is analysis
     assert pipeline_result.analysis_result.analysis_id == "analysis-1"
+    assert pipeline_result.fit_evaluation_result is None
+
+
+def test_job_pipeline_result_with_normalized_analysis_and_fit_evaluation() -> None:
+    envelope = _normalized_envelope()
+    analysis = _analysis_fixture()
+    fit_evaluation = FitEvaluationResult(
+        fit_evaluation_id="fit-1",
+        analysis_id="analysis-1",
+        profile_id="profile-1",
+        fit_status=FitEvaluationStatus.SUCCESS,
+        fit_score=0.82,
+        confidence=0.88,
+        evaluation_summary="Strong alignment with role requirements.",
+        evaluated_at=datetime.utcnow(),
+    )
+    pipeline_result = JobPipelineResult(
+        normalized=envelope,
+        analysis_result=analysis,
+        fit_evaluation_result=fit_evaluation,
+    )
+
+    assert pipeline_result.analysis_result is analysis
+    assert pipeline_result.fit_evaluation_result is fit_evaluation
+    assert pipeline_result.fit_evaluation_result.fit_evaluation_id == "fit-1"
 
 
 def test_job_pipeline_result_preserves_nested_envelope() -> None:

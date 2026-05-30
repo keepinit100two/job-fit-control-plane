@@ -130,11 +130,6 @@ class AnalyzerLLMResult(BaseModel):
     warnings: List[str] = Field(default_factory=list)
 
 
-class JobPipelineResult(BaseModel):
-    normalized: NormalizedJobPostingEnvelope
-    analysis_result: Optional[AnalysisResult] = None
-
-
 class UserCapabilityProfile(BaseModel):
     profile_id: str
     primary_role_focus: str
@@ -178,3 +173,9 @@ class FitEvaluationResult(BaseModel):
     recommended_focus_areas: List[str] = Field(default_factory=list)
     evaluation_summary: str
     evaluated_at: datetime
+
+
+class JobPipelineResult(BaseModel):
+    normalized: NormalizedJobPostingEnvelope
+    analysis_result: Optional[AnalysisResult] = None
+    fit_evaluation_result: Optional[FitEvaluationResult] = None
