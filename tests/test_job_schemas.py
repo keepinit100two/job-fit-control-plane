@@ -4,6 +4,9 @@ from app.domain.job_schemas import (
     AnalysisResult,
     AnalysisStatus,
     AnalyzerLLMResult,
+    ApplicationDecision,
+    DecisionResult,
+    DecisionStatus,
     JobPipelineResult,
     JobPosting,
     NormalizationResult,
@@ -434,3 +437,109 @@ def test_fit_evaluation_result_represents_strengths_gaps_and_positioning() -> No
     assert "event_sourcing_depth" in result.capability_gaps
     assert "control_plane_experience" in result.positioning_advantages
     assert "limited_enterprise_crm_exposure" in result.positioning_concerns
+
+
+def test_decision_result_instantiates_successfully() -> None:
+    result = DecisionResult(
+        decision_id="decision-1",
+        analysis_id="analysis-1",
+        fit_evaluation_id="fit-1",
+        decision_status=DecisionStatus.SUCCESS,
+        decision=ApplicationDecision.APPLY,
+        decision_confidence=0.88,
+        primary_reason="Strong fit score with manageable gaps.",
+        decided_at=datetime.utcnow(),
+    )
+
+    assert result.decision_id == "decision-1"
+    assert result.decision == ApplicationDecision.APPLY
+    assert result.supporting_reasons == []
+    assert result.blocking_concerns == []
+
+
+def test_application_decision_enum_values() -> None:
+    assert ApplicationDecision.APPLY == "apply"
+    assert ApplicationDecision.MAYBE == "maybe"
+    assert ApplicationDecision.SKIP == "skip"
+    assert ApplicationDecision("maybe") is ApplicationDecision.MAYBE
+
+
+def test_decision_status_enum_values() -> None:
+    assert DecisionStatus.SUCCESS == "success"
+    assert DecisionStatus.WARNING == "warning"
+    assert DecisionStatus.FAILURE == "failure"
+    assert DecisionStatus("warning") is DecisionStatus.WARNING
+
+
+def test_decision_result_list_defaults_are_isolated_per_instance() -> None:
+    first = DecisionResult(
+        decision_id="decision-1",
+        analysis_id="analysis-1",
+        fit_evaluation_id="fit-1",
+        decision_status=DecisionStatus.SUCCESS,
+        decision=ApplicationDecision.APPLY,
+        decision_confidence=0.9,
+        primary_reason="First decision.",
+        decided_at=datetime.utcnow(),
+    )
+    second = DecisionResult(
+        decision_id="decision-2",
+        analysis_id="analysis-2",
+        fit_evaluation_id="fit-2",
+        decision_status=DecisionStatus.SUCCESS,
+        decision=ApplicationDecision.SKIP,
+        decision_confidence=0.7,
+        primary_reason="Second decision.",
+        decided_at=datetime.utcnow(),
+    )
+
+    first.supporting_reasons.append("strong_python_match")
+    first.blocking_concerns.append("oauth2_gap")
+
+    assert second.supporting_reasons == []
+    assert second.blocking_concerns == []
+
+
+def test_decision_result_represents_apply_maybe_skip_context() -> None:
+    apply_result = DecisionResult(
+        decision_id="decision-apply",
+        analysis_id="analysis-1",
+        fit_evaluation_id="fit-1",
+        decision_status=DecisionStatus.SUCCESS,
+        decision=ApplicationDecision.APPLY,
+        decision_confidence=0.91,
+        primary_reason="High fit score with strong alignment.",
+        supporting_reasons=["pipeline_design_match"],
+        recommended_next_steps=["prepare_portfolio_examples"],
+        decided_at=datetime.utcnow(),
+    )
+    maybe_result = DecisionResult(
+        decision_id="decision-maybe",
+        analysis_id="analysis-1",
+        fit_evaluation_id="fit-1",
+        decision_status=DecisionStatus.WARNING,
+        decision=ApplicationDecision.MAYBE,
+        decision_confidence=0.62,
+        primary_reason="Moderate fit with notable gaps.",
+        follow_up_questions=["What is the team's OAuth experience?"],
+        recommended_next_steps=["research_integration_patterns"],
+        decided_at=datetime.utcnow(),
+    )
+    skip_result = DecisionResult(
+        decision_id="decision-skip",
+        analysis_id="analysis-1",
+        fit_evaluation_id="fit-1",
+        decision_status=DecisionStatus.SUCCESS,
+        decision=ApplicationDecision.SKIP,
+        decision_confidence=0.85,
+        primary_reason="High-risk gaps outweigh strengths.",
+        blocking_concerns=["kubernetes_at_scale", "hipaa_compliance"],
+        decided_at=datetime.utcnow(),
+    )
+
+    assert apply_result.decision == ApplicationDecision.APPLY
+    assert maybe_result.decision == ApplicationDecision.MAYBE
+    assert skip_result.decision == ApplicationDecision.SKIP
+    assert apply_result.decision_status == DecisionStatus.SUCCESS
+    assert maybe_result.decision_status == DecisionStatus.WARNING
+    assert "kubernetes_at_scale" in skip_result.blocking_concerns

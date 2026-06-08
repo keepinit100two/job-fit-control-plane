@@ -179,3 +179,30 @@ class JobPipelineResult(BaseModel):
     normalized: NormalizedJobPostingEnvelope
     analysis_result: Optional[AnalysisResult] = None
     fit_evaluation_result: Optional[FitEvaluationResult] = None
+
+
+class ApplicationDecision(str, Enum):
+    APPLY = "apply"
+    MAYBE = "maybe"
+    SKIP = "skip"
+
+
+class DecisionStatus(str, Enum):
+    SUCCESS = "success"
+    WARNING = "warning"
+    FAILURE = "failure"
+
+
+class DecisionResult(BaseModel):
+    decision_id: str
+    analysis_id: str
+    fit_evaluation_id: str
+    decision_status: DecisionStatus
+    decision: ApplicationDecision
+    decision_confidence: float
+    primary_reason: str
+    supporting_reasons: List[str] = Field(default_factory=list)
+    blocking_concerns: List[str] = Field(default_factory=list)
+    follow_up_questions: List[str] = Field(default_factory=list)
+    recommended_next_steps: List[str] = Field(default_factory=list)
+    decided_at: datetime
