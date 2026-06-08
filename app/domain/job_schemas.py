@@ -207,3 +207,30 @@ class JobPipelineResult(BaseModel):
     analysis_result: Optional[AnalysisResult] = None
     fit_evaluation_result: Optional[FitEvaluationResult] = None
     decision_result: Optional[DecisionResult] = None
+
+
+class ProposalStatus(str, Enum):
+    SUCCESS = "success"
+    WARNING = "warning"
+    FAILURE = "failure"
+
+
+class ProposalResult(BaseModel):
+    proposal_id: str
+    decision_id: str
+    analysis_id: str
+    fit_evaluation_id: str
+    profile_id: str
+    proposal_status: ProposalStatus
+    proposal_confidence: float
+    positioning_strategy: str
+    lead_strengths: List[str] = Field(default_factory=list)
+    strengths_to_emphasize: List[str] = Field(default_factory=list)
+    gaps_to_address: List[str] = Field(default_factory=list)
+    project_examples: List[str] = Field(default_factory=list)
+    differentiators: List[str] = Field(default_factory=list)
+    cover_letter_angles: List[str] = Field(default_factory=list)
+    interview_talking_points: List[str] = Field(default_factory=list)
+    questions_to_ask_employer: List[str] = Field(default_factory=list)
+    proposal_summary: str
+    generated_at: datetime

@@ -15,6 +15,8 @@ from app.domain.job_schemas import (
     RawJobPosting,
     FitEvaluationResult,
     FitEvaluationStatus,
+    ProposalResult,
+    ProposalStatus,
     UserCapabilityProfile,
 )
 
@@ -577,3 +579,99 @@ def test_decision_result_represents_apply_maybe_skip_context() -> None:
     assert apply_result.decision_status == DecisionStatus.SUCCESS
     assert maybe_result.decision_status == DecisionStatus.WARNING
     assert "kubernetes_at_scale" in skip_result.blocking_concerns
+
+
+def test_proposal_result_instantiates_successfully() -> None:
+    result = ProposalResult(
+        proposal_id="proposal-1",
+        decision_id="decision-1",
+        analysis_id="analysis-1",
+        fit_evaluation_id="fit-1",
+        profile_id="profile-1",
+        proposal_status=ProposalStatus.SUCCESS,
+        proposal_confidence=0.87,
+        positioning_strategy="Lead with control-plane and pipeline design experience.",
+        proposal_summary="Tailored proposal for a strong-fit backend role.",
+        generated_at=datetime.utcnow(),
+    )
+
+    assert result.proposal_id == "proposal-1"
+    assert result.proposal_status == ProposalStatus.SUCCESS
+    assert result.lead_strengths == []
+    assert result.cover_letter_angles == []
+
+
+def test_proposal_status_enum_values() -> None:
+    assert ProposalStatus.SUCCESS == "success"
+    assert ProposalStatus.WARNING == "warning"
+    assert ProposalStatus.FAILURE == "failure"
+    assert ProposalStatus("warning") is ProposalStatus.WARNING
+
+
+def test_proposal_result_list_defaults_are_isolated_per_instance() -> None:
+    first = ProposalResult(
+        proposal_id="proposal-1",
+        decision_id="decision-1",
+        analysis_id="analysis-1",
+        fit_evaluation_id="fit-1",
+        profile_id="profile-1",
+        proposal_status=ProposalStatus.SUCCESS,
+        proposal_confidence=0.9,
+        positioning_strategy="First proposal strategy.",
+        proposal_summary="First proposal.",
+        generated_at=datetime.utcnow(),
+    )
+    second = ProposalResult(
+        proposal_id="proposal-2",
+        decision_id="decision-2",
+        analysis_id="analysis-2",
+        fit_evaluation_id="fit-2",
+        profile_id="profile-2",
+        proposal_status=ProposalStatus.SUCCESS,
+        proposal_confidence=0.8,
+        positioning_strategy="Second proposal strategy.",
+        proposal_summary="Second proposal.",
+        generated_at=datetime.utcnow(),
+    )
+
+    first.lead_strengths.append("pipeline_design")
+    first.interview_talking_points.append("idempotent_ingest")
+
+    assert second.lead_strengths == []
+    assert second.interview_talking_points == []
+
+
+def test_proposal_result_represents_positioning_cover_letter_and_interview_context() -> None:
+    result = ProposalResult(
+        proposal_id="proposal-1",
+        decision_id="decision-1",
+        analysis_id="analysis-1",
+        fit_evaluation_id="fit-1",
+        profile_id="profile-1",
+        proposal_status=ProposalStatus.SUCCESS,
+        proposal_confidence=0.91,
+        positioning_strategy="Position as a control-plane engineer with workflow automation depth.",
+        lead_strengths=["pipeline_design", "schema_modeling"],
+        strengths_to_emphasize=["fastapi", "event_driven_architecture"],
+        gaps_to_address=["oauth2_integration"],
+        project_examples=["job-fit-control-plane"],
+        differentiators=["deterministic_pipeline_orchestration"],
+        cover_letter_angles=[
+            "Highlight end-to-end ingest-to-decision pipeline ownership.",
+            "Emphasize schema-first subsystem design.",
+        ],
+        interview_talking_points=[
+            "Explain idempotent ingest and normalization failure handling.",
+            "Discuss hybrid deterministic + LLM enrichment approach.",
+        ],
+        questions_to_ask_employer=[
+            "How mature is the existing workflow automation stack?",
+        ],
+        proposal_summary="Apply-focused proposal with interview preparation angles.",
+        generated_at=datetime.utcnow(),
+    )
+
+    assert "control-plane engineer" in result.positioning_strategy
+    assert "ingest-to-decision pipeline" in result.cover_letter_angles[0]
+    assert "idempotent ingest" in result.interview_talking_points[0]
+    assert "workflow automation" in result.questions_to_ask_employer[0]
