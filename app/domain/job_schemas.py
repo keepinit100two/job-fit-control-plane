@@ -175,12 +175,6 @@ class FitEvaluationResult(BaseModel):
     evaluated_at: datetime
 
 
-class JobPipelineResult(BaseModel):
-    normalized: NormalizedJobPostingEnvelope
-    analysis_result: Optional[AnalysisResult] = None
-    fit_evaluation_result: Optional[FitEvaluationResult] = None
-
-
 class ApplicationDecision(str, Enum):
     APPLY = "apply"
     MAYBE = "maybe"
@@ -206,3 +200,10 @@ class DecisionResult(BaseModel):
     follow_up_questions: List[str] = Field(default_factory=list)
     recommended_next_steps: List[str] = Field(default_factory=list)
     decided_at: datetime
+
+
+class JobPipelineResult(BaseModel):
+    normalized: NormalizedJobPostingEnvelope
+    analysis_result: Optional[AnalysisResult] = None
+    fit_evaluation_result: Optional[FitEvaluationResult] = None
+    decision_result: Optional[DecisionResult] = None
