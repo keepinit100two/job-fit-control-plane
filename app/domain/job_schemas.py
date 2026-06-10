@@ -234,3 +234,16 @@ class ProposalResult(BaseModel):
     questions_to_ask_employer: List[str] = Field(default_factory=list)
     proposal_summary: str
     generated_at: datetime
+
+
+class ProposalLLMResult(BaseModel):
+    positioning_strategy: str
+    strengths_to_emphasize: List[str] = Field(default_factory=list)
+    gaps_to_address: List[str] = Field(default_factory=list)
+    differentiators: List[str] = Field(default_factory=list)
+    cover_letter_angles: List[str] = Field(default_factory=list)
+    interview_talking_points: List[str] = Field(default_factory=list)
+    questions_to_ask_employer: List[str] = Field(default_factory=list)
+    proposal_summary: str
+    llm_confidence: float
+    warnings: List[str] = Field(default_factory=list)

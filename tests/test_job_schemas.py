@@ -15,6 +15,7 @@ from app.domain.job_schemas import (
     RawJobPosting,
     FitEvaluationResult,
     FitEvaluationStatus,
+    ProposalLLMResult,
     ProposalResult,
     ProposalStatus,
     UserCapabilityProfile,
@@ -675,3 +676,85 @@ def test_proposal_result_represents_positioning_cover_letter_and_interview_conte
     assert "ingest-to-decision pipeline" in result.cover_letter_angles[0]
     assert "idempotent ingest" in result.interview_talking_points[0]
     assert "workflow automation" in result.questions_to_ask_employer[0]
+
+
+def test_proposal_llm_result_instantiates_successfully() -> None:
+    result = ProposalLLMResult(
+        positioning_strategy="Lead with automation and integration depth.",
+        proposal_summary="LLM-enriched proposal positioning.",
+        llm_confidence=0.89,
+    )
+
+    assert result.positioning_strategy == "Lead with automation and integration depth."
+    assert result.llm_confidence == 0.89
+    assert result.strengths_to_emphasize == []
+    assert result.warnings == []
+
+
+def test_proposal_llm_result_list_defaults_are_isolated_per_instance() -> None:
+    first = ProposalLLMResult(
+        positioning_strategy="First strategy.",
+        proposal_summary="First LLM proposal.",
+        llm_confidence=0.9,
+    )
+    second = ProposalLLMResult(
+        positioning_strategy="Second strategy.",
+        proposal_summary="Second LLM proposal.",
+        llm_confidence=0.8,
+    )
+
+    first.cover_letter_angles.append("angle-a")
+    first.warnings.append("warning-a")
+
+    assert second.cover_letter_angles == []
+    assert second.warnings == []
+
+
+def test_proposal_llm_confidence_is_separate_from_proposal_confidence() -> None:
+    llm_result = ProposalLLMResult(
+        positioning_strategy="LLM positioning output.",
+        proposal_summary="LLM proposal output.",
+        llm_confidence=0.93,
+    )
+    proposal_result = ProposalResult(
+        proposal_id="proposal-1",
+        decision_id="decision-1",
+        analysis_id="analysis-1",
+        fit_evaluation_id="fit-1",
+        profile_id="profile-1",
+        proposal_status=ProposalStatus.SUCCESS,
+        proposal_confidence=0.61,
+        positioning_strategy="Merged proposal positioning.",
+        proposal_summary="Merged proposal output.",
+        generated_at=datetime.utcnow(),
+    )
+
+    assert llm_result.llm_confidence == 0.93
+    assert proposal_result.proposal_confidence == 0.61
+    assert not hasattr(llm_result, "proposal_confidence")
+    assert not hasattr(proposal_result, "llm_confidence")
+
+
+def test_proposal_llm_result_represents_positioning_without_system_owned_ids() -> None:
+    result = ProposalLLMResult(
+        positioning_strategy="Position as a deterministic-pipeline specialist.",
+        strengths_to_emphasize=["schema_first_design"],
+        gaps_to_address=["enterprise_crm_depth"],
+        differentiators=["hybrid_llm_enrichment"],
+        cover_letter_angles=["Emphasize control-plane ownership."],
+        interview_talking_points=["Walk through decision engine policy."],
+        questions_to_ask_employer=["What does success look like in 90 days?"],
+        proposal_summary="Strategic positioning from LLM enrichment.",
+        llm_confidence=0.86,
+        warnings=["Limited posting detail on team structure."],
+    )
+
+    assert "deterministic-pipeline" in result.positioning_strategy
+    assert "schema_first_design" in result.strengths_to_emphasize
+    assert "hybrid_llm_enrichment" in result.differentiators
+    assert not hasattr(result, "proposal_id")
+    assert not hasattr(result, "decision_id")
+    assert not hasattr(result, "analysis_id")
+    assert not hasattr(result, "fit_evaluation_id")
+    assert not hasattr(result, "profile_id")
+    assert not hasattr(result, "generated_at")
